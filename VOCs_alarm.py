@@ -104,8 +104,8 @@ def count_alarm(df_raw,stations,p_threshold):
 
 # 读取两个文件
 period = "2021年6月1日-6月30日化工区"
-df1 = pd.read_excel("./input/测试-VOCs报警统计-202106.xlsx",skiprows=[1]) #VOCs表，去掉第二行的单位
-df2 = pd.read_excel("./input/测试-硫化氢和氨报警统计-202106.xlsx",skiprows=[1]) #硫化氢和氨的表，去掉第二行的单位
+df1 = pd.read_excel("./input/7-5VOCs报警统计-202106.xlsx",skiprows=[1]) #VOCs表，去掉第二行的单位
+df2 = pd.read_excel("./input/7-5硫化氢和氨报警统计-202106.xlsx",skiprows=[1]) #硫化氢和氨的表，去掉第二行的单位
 df3 = pd.read_excel("./input/11个报警因子及限值.xlsx",header=0) #11种污染物的限值列表
 
 #合并（表VOCs）和（表硫化氢和氨）
