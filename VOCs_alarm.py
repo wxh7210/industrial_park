@@ -100,19 +100,61 @@ def count_alarm(df_raw,stations,p_threshold):
             
     return df_alarm
 
+def vocs36_alarm_count(df,title):
+    """
+    
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        包含所有站点所有时间的VOCs-36浓度的总数据
+    title : string
+        分区统计flag:金山卫/上海化工区及奉贤
+
+    Returns: pandas DataFrame 
+        预警次数统计表 
+    -------
+    None.
+
+    """
+    stations = df['站点'].drop_duplicates().tolist() #提取所有站点名字
+    time_span = df['时间'].drop_duplicates().tolist() #提取时间
+    df_vocs = pd.DataFrame(index=time_span,columns=stations)
+    for station in stations:
+        tmp = df[df["站点"]==station]["VOCs-36"]  #.loc用于按照index和columns索引
+        df_vocs.loc[:,station] = pd.Series(tmp.tolist(),index=time_span) #一定要索引相同才能赋值,而且pd.Series接受列表而不是Series
+
+    df_vocs[df_vocs.values <=1000] = 0 #用于计算报警次数
+    df_vocs[df_vocs.values > 1000] = 1 #用于计算报警次数
+
+    if(title=="金山卫"):
+        df_vocs = df_vocs.iloc[:,0:19]  #金山卫地区19个站点
+    elif(title=="上海化工区及奉贤分区"):
+        df_vocs = df_vocs.iloc[:,19:31] #上海化工区及奉贤12个站点
+    else:
+        print("VOCs分区名称错误，请重新输入：金山卫、上海化工区及奉贤分区")
+    
+    df_vocs[title + "VOCs报警次数"] = df_vocs.apply(lambda x: x.sum(),axis='columns')
+    df_vocs.loc["合计"] = df_vocs.apply(lambda x: x.sum(), axis='rows') #添加一行统计每个站点的报警总数
+    df_vocs = df_vocs[df_vocs[title + "VOCs报警次数"] != 0 ] #删除没有出现报警的日
+
+    return df_vocs
+
+
 #==================主程序从这里开始=========================
 
 # 读取两个文件
 period = "2021年6月1日-6月30日化工区"
 df1 = pd.read_excel("./input/测试-VOCs报警统计-202106.xlsx",skiprows=[1]) #VOCs表，去掉第二行的单位
 df2 = pd.read_excel("./input/测试-硫化氢和氨报警统计-202106.xlsx",skiprows=[1]) #硫化氢和氨的表，去掉第二行的单位
-df3 = pd.read_excel("./input/11个报警因子及限值.xlsx",header=0) #11种污染物的限值列表
+# df3 = pd.read_excel("./input/11个报警因子及限值.xlsx",header=0) #11种污染物的限值列表，换成二级三级报警后不需要这个表了
 
 #合并（表VOCs）和（表硫化氢和氨）
 df = pd.concat([df1,df2.iloc[:,2:]],axis=1)
 df.to_excel("./output/"+period+"47种污染物原始数据.xlsx")
 p47 = df.columns[2:] #提取所有物种的名称列表 47个
 stations = df['站点'].drop_duplicates().tolist() #提取所有站点名字
+
 
 # #提取报警因子
 # p11_threshold ={}
@@ -189,7 +231,8 @@ print(df_alarm_level_3_count)
 df_alarm_level_3_count.to_excel("./output/"+period+"12种污染物三级报警次数.xlsx")
 
 
+
 #单独另算VOCs-36的报警
-
-
+vocs36_alarm_count(df,"金山卫").to_excel("./output/"+period+"金山卫"+"VOCs报警次数统计表.xlsx")
+vocs36_alarm_count(df,"上海化工区及奉贤分区").to_excel("./output/"+period+"上海化工区及奉贤分区"+"VOCs报警次数统计表.xlsx")
 
