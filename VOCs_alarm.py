@@ -145,12 +145,15 @@ def vocs36_alarm_count(df,title):
 
 # 读取两个文件
 period = "2021年6月1日-6月30日化工区"
-df1 = pd.read_excel("./input/测试-VOCs报警统计-202106.xlsx",skiprows=[1]) #VOCs表，去掉第二行的单位
+df1 = pd.read_excel("./input/原始-7-5VOCs报警统计-202106.xlsx",skiprows=[1]) #VOCs表，去掉第二行的单位
 df2 = pd.read_excel("./input/测试-硫化氢和氨报警统计-202106.xlsx",skiprows=[1]) #硫化氢和氨的表，去掉第二行的单位
 # df3 = pd.read_excel("./input/11个报警因子及限值.xlsx",header=0) #11种污染物的限值列表，换成二级三级报警后不需要这个表了
 
 #合并（表VOCs）和（表硫化氢和氨）
 df = pd.concat([df1,df2.iloc[:,2:]],axis=1)
+df["VOCs-36"] = df.iloc[:,2:38].apply(lambda x: x.sum(),axis='columns') #VOCs-36为36种VOC加个
+df["二甲苯"] = df.iloc[:,23:25].apply(lambda x: x.sum(),axis='columns')  #'二甲苯' = '邻-二甲苯' + '间-二甲苯+对-二甲苯'
+df["氯苯类"] = df.iloc[:,35:37].apply(lambda x: x.sum(),axis='columns')   # '氯苯类' = '氯苯' + '1,2,4-三氯苯'
 df.to_excel("./output/"+period+"47种污染物原始数据.xlsx")
 p47 = df.columns[2:] #提取所有物种的名称列表 47个
 stations = df['站点'].drop_duplicates().tolist() #提取所有站点名字
